@@ -521,6 +521,40 @@
       const select = document.querySelector('select[name="membresia"]');
       const successToast = document.getElementById('successToast');
       const reviewGrid = document.getElementById('reviewGrid');
+      const API_BASE_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+      async function apiRequest(path, options = {}) {
+        const response = await fetch(`${API_BASE_URL}${path}`, options);
+        const contentType = response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+          const text = await response.text();
+
+          if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+            throw new Error('La API de Luxbury no está disponible en este momento. Verifica que el backend esté activo.');
+          }
+
+          throw new Error(text || 'No se pudo conectar con la API.');
+        }
+
+        return response.json();
+      }
+
+      async function parseApiJson(response) {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+          const text = await response.text();
+
+          if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+            throw new Error('La API de Luxbury no está disponible en este momento. Verifica que el backend esté activo.');
+          }
+
+          throw new Error(text || 'No se pudo conectar con la API.');
+        }
+
+        return response.json();
+      }
 
       openButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -587,12 +621,7 @@
 
       const loadComments = async () => {
         try {
-          const response = await fetch('/api/comentarios');
-          if (!response.ok) {
-            throw new Error('No se pudieron cargar los comentarios.');
-          }
-
-          const comments = await response.json();
+          const comments = await apiRequest('/api/comentarios');
           renderComments(comments);
         } catch (error) {
           console.error(error);
@@ -643,7 +672,7 @@
         let checkoutUrl = null;
 
         try {
-          const response = await fetch('/api/create-payment', {
+          const response = await fetch(`${API_BASE_URL}/api/create-payment`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -651,7 +680,7 @@
             body: JSON.stringify(payload),
           });
 
-          const result = await response.json();
+          const result = await parseApiJson(response);
 
           if (!response.ok) {
             throw new Error(result.message || 'No se pudo iniciar el pago.');
@@ -682,7 +711,7 @@
           const rating = Number(commentData.get('comment_rating') || 5);
 
           try {
-            const response = await fetch('/api/comentarios', {
+            const response = await fetch(`${API_BASE_URL}/api/comentarios`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -690,7 +719,7 @@
               body: JSON.stringify({ nombre, email, texto, rating }),
             });
 
-            const result = await response.json();
+            const result = await parseApiJson(response);
 
             if (!response.ok) {
               throw new Error(result.message || 'No se pudo guardar el comentario.');
