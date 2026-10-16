@@ -527,14 +527,13 @@
       const successToast = document.getElementById('successToast');
       const reviewGrid = document.getElementById('reviewGrid');
       // Configuración de API: en local usa http://localhost:3000.
-      // Para producción en Netlify, coloca la URL de tu backend desplegado en Render/Railway:
-      const BACKEND_URL = ''; // Ej: 'https://luxbury-backend.onrender.com'
+      // En producción en Netlify apunta a tu backend desplegado en Render:
+      const BACKEND_URL = 'https://luxbury-parfums.onrender.com';
       const API_BASE_URL =
         window.LUXBURY_API_URL ||
-        BACKEND_URL ||
         (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
           ? 'http://localhost:3000'
-          : '');
+          : BACKEND_URL);
 
       async function apiRequest(path, options = {}) {
         const response = await fetch(`${API_BASE_URL}${path}`, options);
