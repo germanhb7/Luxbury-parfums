@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1792113996011,
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "telefono": "+54 9 11 1111 2222",
+    "membresia": "Velvet",
+    "comentario": "Quiero reservar",
+    "tarjeta": {
+      "nombre": "Ana Lopez",
+      "numero": "•••• 1111",
+      "vencimiento": "12/30",
+      "cvv": "***"
+    },
+    "createdAt": "2026-10-16T01:26:36.011Z"
+  }
+]
