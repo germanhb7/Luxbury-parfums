@@ -311,7 +311,7 @@
             </p>
           </div>
 
-          <div class="review-grid">
+          <div class="review-grid" id="reviewGrid">
             <article class="review-card">
               <div class="stars">★★★★★</div>
               <p>
@@ -357,11 +357,7 @@
               </div>
             </article>
           </div>
-        </div>
-      </section>
 
-      <section class="section" id="comentarios">
-        <div class="container">
           <div class="comment-wrap">
             <div class="comment-header">
               <div class="eyebrow">Tu opinión</div>
@@ -381,9 +377,25 @@
                 </label>
               </div>
 
+              <div class="rating-field">
+                <span>Valoración</span>
+                <div class="star-rating" aria-label="Valoración">
+                  <input type="radio" id="star5" name="comment_rating" value="5" checked />
+                  <label for="star5">★</label>
+                  <input type="radio" id="star4" name="comment_rating" value="4" />
+                  <label for="star4">★</label>
+                  <input type="radio" id="star3" name="comment_rating" value="3" />
+                  <label for="star3">★</label>
+                  <input type="radio" id="star2" name="comment_rating" value="2" />
+                  <label for="star2">★</label>
+                  <input type="radio" id="star1" name="comment_rating" value="1" />
+                  <label for="star1">★</label>
+                </div>
+              </div>
+
               <label>
                 Comentario
-                <textarea name="comment_text" rows="5" placeholder="Escribí tu opinión, experiencia o sugerencia..." required></textarea>
+                <textarea name="comment_text" rows="4" placeholder="Escribí tu opinión..." required></textarea>
               </label>
 
               <button type="submit" class="btn btn-primary">Enviar comentario</button>
@@ -508,6 +520,7 @@
       const commentForm = document.querySelector('.page-comment-form');
       const select = document.querySelector('select[name="membresia"]');
       const successToast = document.getElementById('successToast');
+      const reviewGrid = document.getElementById('reviewGrid');
 
       openButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -523,11 +536,67 @@
         modal.setAttribute('aria-hidden', 'true');
       };
 
-      const showToast = () => {
+      const showToast = (title = 'Reserva enviada', message = 'Tu solicitud se abrió en WhatsApp para confirmar la experiencia.') => {
+        const titleNode = successToast.querySelector('strong');
+        const messageNode = successToast.querySelector('span');
+
+        titleNode.textContent = title;
+        messageNode.textContent = message;
         successToast.classList.add('show');
+
         setTimeout(() => {
           successToast.classList.remove('show');
         }, 2600);
+      };
+
+      const createReviewCard = (comment) => {
+        const ratingValue = Math.max(1, Math.min(5, Number(comment.rating || 5)));
+        const stars = '★'.repeat(ratingValue) + '☆'.repeat(5 - ratingValue);
+
+        const article = document.createElement('article');
+        article.className = 'review-card comment-item';
+        article.innerHTML = `
+          <div class="stars">${stars}</div>
+          <p>“${(comment.texto || '').replace(/</g, '&lt;')}”</p>
+          <div class="reviewer">
+            <div class="reviewer-avatar">${(comment.nombre || 'L').charAt(0).toUpperCase()}</div>
+            <div>
+              <strong>${(comment.nombre || 'Cliente Luxbury').replace(/</g, '&lt;')}</strong>
+              <span>${new Date(comment.createdAt || Date.now()).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}</span>
+            </div>
+          </div>
+        `;
+
+        return article;
+      };
+
+      const renderComments = (comments = []) => {
+        if (!reviewGrid) return;
+
+        comments
+          .slice(0, 6)
+          .reverse()
+          .forEach((comment) => {
+            reviewGrid.prepend(createReviewCard(comment));
+          });
+      };
+
+      const loadComments = async () => {
+        try {
+          const response = await fetch('/api/comentarios');
+          if (!response.ok) {
+            throw new Error('No se pudieron cargar los comentarios.');
+          }
+
+          const comments = await response.json();
+          renderComments(comments);
+        } catch (error) {
+          console.error(error);
+        }
       };
 
       closeButton.addEventListener('click', closeModal);
@@ -590,21 +659,8 @@
 
           checkoutUrl = result.init_point || result.sandbox_init_point;
         } catch (error) {
-          console.error('Error al crear la sesión de Stripe:', error);
-
-          const whatsappNumber = '5493454937789';
-          const message = `Hola Luxbury, quiero reservar una experiencia.%0A%0A` +
-            `Nombre: ${nombre}%0A` +
-            `Email: ${email}%0A` +
-            `Teléfono: ${telefono}%0A` +
-            `Membresía: ${membresia}%0A` +
-            `Comentario: ${comentario}%0A` +
-            `Tarjeta - Nombre: ${tarjetaNombre}%0A` +
-            `Tarjeta - Número: ${tarjetaNumero ? `•••• ${tarjetaNumero.slice(-4)}` : 'No indicado'}%0A` +
-            `Tarjeta - Vencimiento: ${tarjetaVencimiento}%0A` +
-            `Tarjeta - CVV: ${tarjetaCvv === 'No indicado' ? 'No indicado' : '***'}`;
-
-          window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+          console.error('Error al crear la sesión de pago:', error);
+          showToast('Reserva enviada', 'No se pudo abrir el pago directo. Te contactaremos para confirmar la experiencia.');
         }
 
         if (checkoutUrl) {
@@ -613,28 +669,52 @@
 
         closeModal();
         form.reset();
-        showToast();
       });
 
       if (commentForm) {
-        commentForm.addEventListener('submit', (event) => {
+        commentForm.addEventListener('submit', async (event) => {
           event.preventDefault();
 
           const commentData = new FormData(commentForm);
           const nombre = commentData.get('comment_nombre') || 'Sin nombre';
           const email = commentData.get('comment_email') || 'Sin email';
           const texto = commentData.get('comment_text') || 'Sin comentario';
-          const whatsappNumber = '5493454937789';
-          const message = `Hola Luxbury, quiero dejar un comentario.%0A%0A` +
-            `Nombre: ${nombre}%0A` +
-            `Email: ${email}%0A` +
-            `Comentario: ${texto}`;
+          const rating = Number(commentData.get('comment_rating') || 5);
 
-          window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
-          commentForm.reset();
-          showToast();
+          try {
+            const response = await fetch('/api/comentarios', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ nombre, email, texto, rating }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.message || 'No se pudo guardar el comentario.');
+            }
+
+            const createdComment = result.data || {
+              nombre,
+              email,
+              texto,
+              rating: Number(commentData.get('comment_rating') || 5),
+              createdAt: new Date().toISOString(),
+            };
+
+            reviewGrid.prepend(createReviewCard(createdComment));
+            commentForm.reset();
+            showToast('Comentario publicado', 'Tu experiencia quedó visible en la página.');
+          } catch (error) {
+            console.error(error);
+            showToast('No se pudo publicar', error.message || 'Intenta de nuevo en unos segundos.');
+          }
         });
       }
+
+      loadComments();
     </script>
   </body>
 </html>
