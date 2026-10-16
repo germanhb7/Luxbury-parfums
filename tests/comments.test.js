@@ -27,12 +27,13 @@ async function request(path, options = {}) {
   }
 }
 
-test('POST /api/comentarios guarda un comentario', async () => {
+test('POST /api/comentarios guarda un comentario con país/ciudad', async () => {
   const result = await request('/api/comentarios', {
     method: 'POST',
     body: JSON.stringify({
       nombre: 'Ana',
       email: 'ana@test.com',
+      pais: 'Buenos Aires',
       texto: 'Me encantó la fragancia.',
     }),
   });
@@ -40,19 +41,17 @@ test('POST /api/comentarios guarda un comentario', async () => {
   assert.equal(result.status, 201);
   assert.equal(result.body.ok, true);
   assert.equal(result.body.data.nombre, 'Ana');
+  assert.equal(result.body.data.pais, 'Buenos Aires');
   assert.equal(result.body.data.texto, 'Me encantó la fragancia.');
 });
 
-test('GET /api/comentarios devuelve la lista', async () => {
+test('GET /api/comentarios devuelve la lista con país', async () => {
   const result = await request('/api/comentarios');
 
   assert.equal(result.status, 200);
   assert.equal(Array.isArray(result.body), true);
-});
-
-test.after(async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
+  if (result.body.length > 0) {
+    assert.ok(result.body[0].pais !== undefined);
   }
 });
 
@@ -61,4 +60,3 @@ test.after(async () => {
     await mongoose.disconnect();
   }
 });
-

@@ -67,6 +67,7 @@ if (MONGODB_URI) {
 const comentarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   email: { type: String, required: true },
+  pais: { type: String, default: 'Argentina' },
   texto: { type: String, required: true },
   rating: { type: Number, default: 5 },
   createdAt: { type: Date, default: Date.now },
@@ -200,6 +201,7 @@ app.get('/api/comentarios', async (req, res) => {
             id: c._id,
             nombre: c.nombre,
             email: c.email,
+            pais: c.pais || 'Argentina',
             texto: c.texto,
             rating: c.rating,
             createdAt: c.createdAt,
@@ -215,7 +217,7 @@ app.get('/api/comentarios', async (req, res) => {
 
 // Guardar un nuevo comentario
 app.post('/api/comentarios', async (req, res) => {
-  const { nombre, email, texto, rating } = req.body || {};
+  const { nombre, email, pais, texto, rating } = req.body || {};
 
   if (!nombre || !email || !texto) {
     return res.status(400).json({
@@ -227,6 +229,7 @@ app.post('/api/comentarios', async (req, res) => {
   const commentData = {
     nombre: String(nombre).trim(),
     email: String(email).trim(),
+    pais: String(pais || 'Argentina').trim(),
     texto: String(texto).trim(),
     rating: Number(rating) || 5,
     createdAt: new Date().toISOString(),
@@ -238,6 +241,7 @@ app.post('/api/comentarios', async (req, res) => {
       const nuevo = new Comentario({
         nombre: commentData.nombre,
         email: commentData.email,
+        pais: commentData.pais,
         texto: commentData.texto,
         rating: commentData.rating,
         createdAt: commentData.createdAt,

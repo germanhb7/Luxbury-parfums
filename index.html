@@ -375,6 +375,11 @@
                   Email
                   <input type="email" name="comment_email" placeholder="tuemail@email.com" required />
                 </label>
+
+                <label>
+                  Ciudad / País
+                  <input type="text" name="comment_pais" placeholder="Ej: Buenos Aires, París..." required />
+                </label>
               </div>
 
               <div class="rating-field">
@@ -604,11 +609,7 @@
             <div class="reviewer-avatar">${(comment.nombre || 'L').charAt(0).toUpperCase()}</div>
             <div>
               <strong>${(comment.nombre || 'Cliente Luxbury').replace(/</g, '&lt;')}</strong>
-              <span>${new Date(comment.createdAt || Date.now()).toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })}</span>
+              <span>${(comment.pais || 'Argentina').replace(/</g, '&lt;')}</span>
             </div>
           </div>
         `;
@@ -715,6 +716,7 @@
           const commentData = new FormData(commentForm);
           const nombre = commentData.get('comment_nombre') || 'Sin nombre';
           const email = commentData.get('comment_email') || 'Sin email';
+          const pais = commentData.get('comment_pais') || 'Argentina';
           const texto = commentData.get('comment_text') || 'Sin comentario';
           const rating = Number(commentData.get('comment_rating') || 5);
 
@@ -724,7 +726,7 @@
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ nombre, email, texto, rating }),
+              body: JSON.stringify({ nombre, email, pais, texto, rating }),
             });
 
             const result = await parseApiJson(response);
@@ -736,6 +738,7 @@
             const createdComment = result.data || {
               nombre,
               email,
+              pais,
               texto,
               rating: Number(commentData.get('comment_rating') || 5),
               createdAt: new Date().toISOString(),
