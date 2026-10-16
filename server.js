@@ -7,11 +7,14 @@ const path = require('path');
 const mongoose = require('mongoose');
 const mercadopago = require('mercadopago');
 
-// Configuración DNS para evitar ECONNREFUSED en registros SRV de MongoDB Atlas en Windows / redes locales
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {
-  // Ignorar si el entorno no permite modificar servidores DNS
+// Ajuste DNS únicamente para Windows local (evita querySrv ECONNREFUSED en routers locales).
+// En servidores Linux/cloud como Render se respeta el DNS nativo del contenedor.
+if (process.platform === 'win32') {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (e) {
+    // Ignorar si el entorno no permite modificar servidores DNS
+  }
 }
 
 const app = express();
@@ -44,23 +47,45 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(__dirname));
 
-// --- Conexión a MongoDB Atlas con Mongoose ---
+// --- Conexión a MongoDB Atlas con Mongoose y reconexión automática ---
 const MONGODB_URI = process.env.MONGODB_URI;
+let lastMongoError = null;
 
-if (MONGODB_URI) {
+function connectToMongo() {
+  if (!MONGODB_URI) {
+    console.log('ℹ️ MONGODB_URI no definida. Operando con almacenamiento local JSON.');
+    return;
+  }
+
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    return;
+  }
+
   mongoose
     .connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
     })
     .then(() => {
+      lastMongoError = null;
       console.log('✅ Conectado exitosamente a MongoDB Atlas (Luxbury)');
     })
     .catch((err) => {
+      lastMongoError = err.message;
       console.error('⚠️ No se pudo conectar a MongoDB Atlas:', err.message);
-      console.log('ℹ️ Operando en modo de respaldo con almacenamiento local JSON.');
+      if (require.main === module) {
+        console.log('🔄 Reintentando conexión con MongoDB Atlas en 5 segundos...');
+        setTimeout(connectToMongo, 5000);
+      }
     });
-} else {
-  console.log('ℹ️ MONGODB_URI no definida. Operando con almacenamiento local JSON.');
+}
+
+connectToMongo();
+
+if (require.main === module) {
+  mongoose.connection.on('disconnected', () => {
+    console.log('⚠️ Conexión perdida con MongoDB Atlas. Reintentando...');
+    setTimeout(connectToMongo, 5000);
+  });
 }
 
 // --- Modelos de Mongoose ---
@@ -156,17 +181,22 @@ function addComment(data) {
 // Estado del servidor y de la base de datos
 app.get('/api/health', (req, res) => {
   const isMongoReady = mongoose.connection.readyState === 1;
+  if (!isMongoReady) {
+    connectToMongo();
+  }
   res.json({
     ok: true,
     message: 'Servidor de Luxbury activo',
     database: isMongoReady ? 'Conectado a MongoDB Atlas' : 'Almacenamiento local (JSON)',
     mongoReadyState: mongoose.connection.readyState,
+    hasMongoUri: Boolean(MONGODB_URI),
+    lastMongoError: lastMongoError || null,
   });
 });
 
 // Obtener todas las reservas (desde MongoDB con fallback a JSON)
 app.get('/api/reservas', async (req, res) => {
-  if (MONGODB_URI) {
+  if (mongoose.connection.readyState === 1) {
     try {
       const reservas = await Reserva.find().sort({ createdAt: -1 }).lean();
       if (reservas && reservas.length > 0) {
@@ -192,7 +222,7 @@ app.get('/api/reservas', async (req, res) => {
 
 // Obtener todos los comentarios (desde MongoDB con fallback a JSON)
 app.get('/api/comentarios', async (req, res) => {
-  if (MONGODB_URI) {
+  if (mongoose.connection.readyState === 1) {
     try {
       const comentarios = await Comentario.find().sort({ createdAt: -1 }).lean();
       if (comentarios && comentarios.length > 0) {
@@ -236,7 +266,7 @@ app.post('/api/comentarios', async (req, res) => {
     id: Date.now(),
   };
 
-  if (MONGODB_URI) {
+  if (mongoose.connection.readyState === 1) {
     try {
       const nuevo = new Comentario({
         nombre: commentData.nombre,
@@ -251,6 +281,9 @@ app.post('/api/comentarios', async (req, res) => {
     } catch (err) {
       console.error('Error guardando comentario en MongoDB Atlas:', err.message);
     }
+  } else {
+    // Si no está conectado, dispara intento de conexión en segundo plano
+    connectToMongo();
   }
 
   // Guardamos también en JSON de respaldo para redundancia
@@ -300,7 +333,7 @@ app.post('/api/reservas', async (req, res) => {
     id: Date.now(),
   };
 
-  if (MONGODB_URI) {
+  if (mongoose.connection.readyState === 1) {
     try {
       const nueva = new Reserva(reservationData);
       const doc = await nueva.save();
@@ -308,6 +341,8 @@ app.post('/api/reservas', async (req, res) => {
     } catch (err) {
       console.error('Error guardando reserva en MongoDB Atlas:', err.message);
     }
+  } else {
+    connectToMongo();
   }
 
   addReservation(reservationData);
@@ -357,7 +392,7 @@ app.post('/api/create-payment', async (req, res) => {
   };
 
   // Guardamos la reserva en MongoDB Atlas y en JSON
-  if (MONGODB_URI) {
+  if (mongoose.connection.readyState === 1) {
     try {
       const nueva = new Reserva(reservationRecord);
       const doc = await nueva.save();
@@ -365,6 +400,8 @@ app.post('/api/create-payment', async (req, res) => {
     } catch (err) {
       console.error('Error guardando reserva en MongoDB Atlas:', err.message);
     }
+  } else {
+    connectToMongo();
   }
   addReservation(reservationRecord);
 
