@@ -1,5 +1,20 @@
 [
   {
+    "nombre": "Cliente VIP",
+    "email": "vip@luxbury.com",
+    "telefono": "+54 9 11 9999 8888",
+    "membresia": "Maison",
+    "comentario": "Interesado en sesion olfativa privada.",
+    "tarjeta": {
+      "nombre": "Cliente VIP",
+      "numero": "•••• 3333",
+      "vencimiento": "11/29",
+      "cvv": "***"
+    },
+    "createdAt": "2026-10-16T03:49:13.963Z",
+    "id": "6ad19eb9b6baa65b1420f854"
+  },
+  {
     "id": 1792113996011,
     "nombre": "Ana",
     "email": "ana@test.com",

@@ -2,6 +2,13 @@
   publish = "."
   command = ""
 
+# Si deseas que Netlify reenvíe automáticamente las llamadas a tu backend en Render/Railway:
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://tu-backend-en-render.onrender.com/api/:splat"
+#   status = 200
+#   force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -1,0 +1,58 @@
+[
+  {
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "texto": "Me encantó la fragancia.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:50:30.323Z",
+    "id": "6ad19f06ab83bbd1f2fd85b9"
+  },
+  {
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "texto": "Me encantó la fragancia.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:49:29.792Z",
+    "id": "6ad19ec92e194337a12a3b48"
+  },
+  {
+    "nombre": "Josue Gil",
+    "email": "josue@luxbury.com",
+    "texto": "Fragancia excepcional para alta costura.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:49:08.320Z",
+    "id": "6ad19eb4b6baa65b1420f852"
+  },
+  {
+    "nombre": "Prueba Germán",
+    "email": "german@test.com",
+    "texto": "Perfume excepcional",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:45:08.667Z",
+    "id": 1792122308668
+  },
+  {
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "texto": "Me encantó la fragancia.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:43:53.304Z",
+    "id": 1792122233305
+  },
+  {
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "texto": "Me encantó la fragancia.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:42:52.756Z",
+    "id": 1792122172757
+  },
+  {
+    "id": 1792121929415,
+    "nombre": "Ana",
+    "email": "ana@test.com",
+    "texto": "Me encantó la fragancia.",
+    "rating": 5,
+    "createdAt": "2026-10-16T03:38:49.415Z"
+  }
+]

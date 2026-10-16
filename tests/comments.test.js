@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const mongoose = require('mongoose');
 const { app } = require('../server.js');
 
 async function request(path, options = {}) {
@@ -48,3 +49,16 @@ test('GET /api/comentarios devuelve la lista', async () => {
   assert.equal(result.status, 200);
   assert.equal(Array.isArray(result.body), true);
 });
+
+test.after(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+});
+
+test.after(async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+});
+

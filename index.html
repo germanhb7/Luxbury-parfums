@@ -521,7 +521,15 @@
       const select = document.querySelector('select[name="membresia"]');
       const successToast = document.getElementById('successToast');
       const reviewGrid = document.getElementById('reviewGrid');
-      const API_BASE_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+      // Configuración de API: en local usa http://localhost:3000.
+      // Para producción en Netlify, coloca la URL de tu backend desplegado en Render/Railway:
+      const BACKEND_URL = ''; // Ej: 'https://luxbury-backend.onrender.com'
+      const API_BASE_URL =
+        window.LUXBURY_API_URL ||
+        BACKEND_URL ||
+        (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:3000'
+          : '');
 
       async function apiRequest(path, options = {}) {
         const response = await fetch(`${API_BASE_URL}${path}`, options);
