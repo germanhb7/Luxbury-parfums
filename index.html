@@ -360,6 +360,38 @@
         </div>
       </section>
 
+      <section class="section" id="comentarios">
+        <div class="container">
+          <div class="comment-wrap">
+            <div class="comment-header">
+              <div class="eyebrow">Tu opinión</div>
+              <h2>Deja tu comentario y comparte tu experiencia Luxbury.</h2>
+            </div>
+
+            <form class="page-comment-form">
+              <div class="comment-grid">
+                <label>
+                  Nombre
+                  <input type="text" name="comment_nombre" placeholder="Tu nombre" required />
+                </label>
+
+                <label>
+                  Email
+                  <input type="email" name="comment_email" placeholder="tuemail@email.com" required />
+                </label>
+              </div>
+
+              <label>
+                Comentario
+                <textarea name="comment_text" rows="5" placeholder="Escribí tu opinión, experiencia o sugerencia..." required></textarea>
+              </label>
+
+              <button type="submit" class="btn btn-primary">Enviar comentario</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="contact">
         <div class="container">
           <div class="cta-box">
@@ -473,6 +505,7 @@
       const openButtons = document.querySelectorAll('.open-modal');
       const closeButton = document.querySelector('.modal-close');
       const form = document.querySelector('.reservation-form');
+      const commentForm = document.querySelector('.page-comment-form');
       const select = document.querySelector('select[name="membresia"]');
       const successToast = document.getElementById('successToast');
 
@@ -582,6 +615,26 @@
         form.reset();
         showToast();
       });
+
+      if (commentForm) {
+        commentForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+
+          const commentData = new FormData(commentForm);
+          const nombre = commentData.get('comment_nombre') || 'Sin nombre';
+          const email = commentData.get('comment_email') || 'Sin email';
+          const texto = commentData.get('comment_text') || 'Sin comentario';
+          const whatsappNumber = '5493454937789';
+          const message = `Hola Luxbury, quiero dejar un comentario.%0A%0A` +
+            `Nombre: ${nombre}%0A` +
+            `Email: ${email}%0A` +
+            `Comentario: ${texto}`;
+
+          window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+          commentForm.reset();
+          showToast();
+        });
+      }
     </script>
   </body>
 </html>
